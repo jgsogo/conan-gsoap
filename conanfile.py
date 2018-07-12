@@ -1,6 +1,7 @@
 
 
 import os
+import shutil
 from conans import ConanFile, AutoToolsBuildEnvironment, tools, CMake, RunEnvironment, MSBuild
 from conans.errors import NotFoundException
 
@@ -38,38 +39,39 @@ class ApacheAPR(ConanFile):
 
     def _patch_vcxproj(self, vcxproj):
         # MSVC 2015
-        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionSettings">', r'<ImportGroup Label="ExtensionSettings"><Import Project="..\..\..\..\..\..\..\..\Users\Laura\.conan\data\winflexbison\2.5.14\jgsogo\stable\package\63da998e3642b50bee33f4449826b2d623661505\bin\custom_build_rules\win_flex_bison_custom_build.props" />')
-        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionTargets">', r'<ImportGroup Label="ExtensionTargets"><Import Project="..\..\..\..\..\..\..\..\Users\Laura\.conan\data\winflexbison\2.5.14\jgsogo\stable\package\63da998e3642b50bee33f4449826b2d623661505\bin\custom_build_rules\win_flex_bison_custom_build.targets" />')
-        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_lex.l" />', '<Flex Include="soapcpp2_lex.l"><FileType>Document</FileType></Flex>')
-        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_yacc.y" />', '<Bison Include="soapcpp2_yacc.y"><FileType>Document</FileType></Bison>')
+        print("*"*100)
+        print(os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props"))
+        props_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props")
+        targets_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.targets")
+        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionSettings">', '<ImportGroup Label="ExtensionSettings"><Import Project="{}" />'.format(props_file))
+        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionTargets">', '<ImportGroup Label="ExtensionTargets"><Import Project="{}" />'.format(targets_file))
+        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_lex.l" />', '<Flex Include="soapcpp2_lex.l"><FileType>Document</FileType><OutputFile>lex.%(Filename).c</OutputFile></Flex>')
+        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_yacc.y" />', '<Bison Include="soapcpp2_yacc.y"><FileType>Document</FileType><OutputFile>%(Filename).tab.c</OutputFile></Bison>')
 
     def build(self):
         if self.settings.os == "Windows":
+            # Build soapcpp2.exe
             with tools.environment_append(RunEnvironment(self).vars):
-                self.run("win_flex --version")
-                self.run("win_bison --version")
-                self.run("win_flex --help")
-                self.run("win_bison --help")
+                soapcpp2_dir = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2"))
+                soapcpp2_sln = os.path.join(soapcpp2_dir, "soapcpp2.sln")
                 msbuild = MSBuild(self)
                 try:
-                    print("*"*100)
-                    out = msbuild.build(os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2", "soapcpp2.sln")),
-                                        platforms={'x86': 'Win32'})
-                    print(out)
+                    out = msbuild.build(soapcpp2_sln, platforms={'x86': 'Win32'})
                 except Exception as e:
-                    print("!" * 100)
-                    print(e)
-                    print(type(e))
-                self._patch_vcxproj(os.path.abspath(
-                    os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2", "soapcpp2",
-                                 "soapcpp2.vcxproj")))
-                out = msbuild.build(os.path.abspath(
-                    os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2", "soapcpp2.sln")),
-                    upgrade_project=False,
-                    platforms={'x86': 'Win32'})
-                print(out)
-                # soapcpp2_flex = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2", "soapcpp2", "soapcpp2_lex.l"))
-                # self.run("win_flex %s" % soapcpp2_flex)
+                    pass  # It fails when upgrading
+                self._patch_vcxproj(os.path.join(soapcpp2_dir, "soapcpp2", "soapcpp2.vcxproj"))
+                out = msbuild.build(soapcpp2_sln, upgrade_project=False, platforms={'x86': 'Win32'})
+
+            # Build wsdl2h.exe
+            wsdl2h_dir = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "wsdl2h"))
+            # - copy soapcpp2.exe to wsdl2h directory (we want to use what we have compiled)
+            shutil.copy2(os.path.join(soapcpp2_dir, str(self.settings.build_type), "soapcpp2.exe"),
+                         os.path.join(wsdl2h_dir, "wsdl2h"))
+            # - compile it
+            wsdl2h_sln = os.path.join(wsdl2h_dir, "wsdl2h.sln")
+            msbuild = MSBuild(self)
+            out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
+
         else:
             env_build = AutoToolsBuildEnvironment(self)
             env_build.configure(configure_dir=self.lib_name, args=['--prefix', self.package_folder, ], build=False)
@@ -77,7 +79,9 @@ class ApacheAPR(ConanFile):
             env_build.make(args=['install'])
 
     def package(self):
-        pass
+        output_path = os.path.join(self.build_folder, self.lib_name, "gsoap", "VisualStudio2005")
+        self.copy("*.exe", dst="bin", src=os.path.join(output_path, "soapcpp2", str(self.settings.build_type)))
+        self.copy("*.exe", dst="bin", src=os.path.join(output_path, "wsdl2h", str(self.settings.build_type)))
 
     def package_info(self):
-        pass
+        self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
