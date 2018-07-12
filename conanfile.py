@@ -39,8 +39,6 @@ class ApacheAPR(ConanFile):
 
     def _patch_vcxproj(self, vcxproj):
         # MSVC 2015
-        print("*"*100)
-        print(os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props"))
         props_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props")
         targets_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.targets")
         tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionSettings">', '<ImportGroup Label="ExtensionSettings"><Import Project="{}" />'.format(props_file))
