@@ -6,7 +6,7 @@ from conans import ConanFile, AutoToolsBuildEnvironment, tools, CMake, RunEnviro
 from conans.errors import NotFoundException
 
 
-class ApacheAPR(ConanFile):
+class GSoap(ConanFile):
     name = "gsoap"  # TODO: Actual name is gSOAP, but may I adhere to @bincrafters claim for lowercase names?
     version_major = "2.8"
     version = version_major + ".68"
@@ -17,8 +17,8 @@ class ApacheAPR(ConanFile):
                   "REST XML Web services and generic C/C++ XML data bindings."
     exports_sources = ["LICENSE", ]
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False]}
-    default_options = "shared=False"
+    options = {"with_openssl": [True, False]}
+    default_options = "with_openssl=True"
     generators = "cmake"
     short_paths = True
 
@@ -30,6 +30,8 @@ class ApacheAPR(ConanFile):
         else:
             self.requires("bison/3.0.4@bincrafters/stable")
             self.requires("flex/2.6.4@bincrafters/stable")
+        if self.options.with_openssl:
+            self.requires("OpenSSL/1.0.2o@conan/stable")
 
     def source(self):
         try:
@@ -37,7 +39,7 @@ class ApacheAPR(ConanFile):
         except NotFoundException:  # Maybe it has been moved to `oldreleases`
             tools.get("https://sourceforge.net/projects/gsoap2/files/oldreleases/{name}_{version}.zip/download".format(name=self.name, version=self.version))
 
-    def _patch_vcxproj(self, vcxproj):
+    def _patch_soapcpp2(self, vcxproj):
         # MSVC 2015
         props_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props")
         targets_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.targets")
@@ -45,6 +47,10 @@ class ApacheAPR(ConanFile):
         tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionTargets">', '<ImportGroup Label="ExtensionTargets"><Import Project="{}" />'.format(targets_file))
         tools.replace_in_file(vcxproj, '<None Include="soapcpp2_lex.l" />', '<Flex Include="soapcpp2_lex.l"><FileType>Document</FileType><OutputFile>lex.%(Filename).c</OutputFile></Flex>')
         tools.replace_in_file(vcxproj, '<None Include="soapcpp2_yacc.y" />', '<Bison Include="soapcpp2_yacc.y"><FileType>Document</FileType><OutputFile>%(Filename).tab.c</OutputFile></Bison>')
+
+    def _patch_wsdl2h(self, vcxproj):
+        if self.options.with_openssl:
+            tools.replace_in_file(vcxproj, '<PreprocessorDefinitions>WIN32', '<PreprocessorDefinitions>WIN32;WITH_OPENSSL')
 
     def build(self):
         if self.settings.os == "Windows":
@@ -57,7 +63,7 @@ class ApacheAPR(ConanFile):
                     out = msbuild.build(soapcpp2_sln, platforms={'x86': 'Win32'})
                 except Exception as e:
                     pass  # It fails when upgrading
-                self._patch_vcxproj(os.path.join(soapcpp2_dir, "soapcpp2", "soapcpp2.vcxproj"))
+                self._patch_soapcpp2(os.path.join(soapcpp2_dir, "soapcpp2", "soapcpp2.vcxproj"))
                 out = msbuild.build(soapcpp2_sln, upgrade_project=False, platforms={'x86': 'Win32'})
 
             # Build wsdl2h.exe
@@ -68,6 +74,7 @@ class ApacheAPR(ConanFile):
             # - compile it
             wsdl2h_sln = os.path.join(wsdl2h_dir, "wsdl2h.sln")
             msbuild = MSBuild(self)
+            self._patch_wsdl2h(os.path.join(wsdl2h_dir, "wsdl2h", "wsdl2h.vcxproj"))
             out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
 
         else:
