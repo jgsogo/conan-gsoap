@@ -109,9 +109,11 @@ class GSoap(ConanFile):
             env_build.make(args=['install'])
 
     def package(self):
-        output_path = os.path.join(self.build_folder, self.lib_name, "gsoap", "VisualStudio2005")
+        gsoap_path = os.path.join(self.build_folder, self.lib_name, "gsoap")
+        output_path = os.path.join(gsoap_path, "VisualStudio2005")
         self.copy("*.exe", dst="bin", src=os.path.join(output_path, "soapcpp2", str(self.settings.build_type)))
         self.copy("*.exe", dst="bin", src=os.path.join(output_path, "wsdl2h", str(self.settings.build_type)))
+        self.copy("*", dst="import", src=os.path.join(gsoap_path, "import"))
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
