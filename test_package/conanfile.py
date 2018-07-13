@@ -1,6 +1,6 @@
 import os
 
-from conans import ConanFile, CMake, tools
+from conans import ConanFile, CMake, tools, RunEnvironment
 
 
 class GsoapTestConan(ConanFile):
@@ -20,6 +20,10 @@ class GsoapTestConan(ConanFile):
         self.copy('*.so*', dst='bin', src='lib')
 
     def test(self):
+        with tools.environment_append(RunEnvironment(self).vars):
+            self.run("wsdl2h -help")
+            self.run("soapcpp2 -help")
+
         if not tools.cross_building(self.settings):
             os.chdir("bin")
             self.run(".%sexample" % os.sep)
