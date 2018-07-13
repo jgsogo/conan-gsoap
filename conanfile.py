@@ -2,6 +2,8 @@
 
 import os
 import shutil
+from lxml import etree
+
 from conans import ConanFile, AutoToolsBuildEnvironment, tools, CMake, RunEnvironment, MSBuild
 from conans.errors import NotFoundException
 
@@ -49,8 +51,31 @@ class GSoap(ConanFile):
         tools.replace_in_file(vcxproj, '<None Include="soapcpp2_yacc.y" />', '<Bison Include="soapcpp2_yacc.y"><FileType>Document</FileType><OutputFile>%(Filename).tab.c</OutputFile></Bison>')
 
     def _patch_wsdl2h(self, vcxproj):
+        parser = etree.XMLParser(remove_blank_text=True)
+        tree = etree.parse(vcxproj, parser=parser)
+        root = tree.getroot()
         if self.options.with_openssl:
-            tools.replace_in_file(vcxproj, 'PreprocessorDefinitions="WIN32', 'PreprocessorDefinitions="WIN32;WITH_OPENSSL')
+            for conf_tools in root.xpath("./Configurations/Configuration/Tool[@Name='VCCLCompilerTool']"):
+                conf_tools.attrib['PreprocessorDefinitions'] = ';'.join(["WITH_OPENSSL", conf_tools.attrib['PreprocessorDefinitions']])
+                include_dirs = [os.path.join(self.deps_cpp_info["OpenSSL"].rootpath, inc_dir) for inc_dir in self.deps_cpp_info["OpenSSL"].includedirs]
+                conf_tools.attrib['AdditionalIncludeDirectories'] = ';'.join(include_dirs + 
+                                                                             [r'"{}"'.format(os.path.dirname(vcxproj)), 
+                                                                              r'"{}"'.format(os.path.join(os.path.dirname(vcxproj), '..', '..', '..', 'plugin')),
+                                                                              conf_tools.attrib.get('AdditionalIncludeDirectories', '')])
+
+            for link_tool in root.xpath("./Configurations/Configuration/Tool[@Name='VCLinkerTool']"):
+                libraries = ["{}.lib".format(lib) for lib in self.deps_cpp_info["OpenSSL"].libs] + ["User32.lib", "GDI32.lib", "Advapi32.lib", "msvcrt{}.lib".format("" if str(self.settings.build_type)=="Release" else "d")]  # TODO: Those additional libraries, are they needed in conan-openssl?
+                link_tool.attrib['AdditionalDependencies'] = ' '.join(libraries + [link_tool.attrib['AdditionalDependencies'],])
+                library_dirs = [os.path.join(self.deps_cpp_info["OpenSSL"].rootpath, libdir) for libdir in self.deps_cpp_info["OpenSSL"].libdirs]
+                link_tool.attrib['AdditionalLibraryDirectories'] = ';'.join(library_dirs + [link_tool.attrib.get('AdditionalLibraryDirectories', ''),])
+
+            source_files = root.xpath("./Files/Filter[@Name='Source Files']")
+            assert len(source_files) == 1
+            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/httpda.c")
+            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/smdevp.c")
+            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/threads.c")
+
+        tree.write(vcxproj, pretty_print=True, xml_declaration=True)
 
     def build(self):
         if self.settings.os == "Windows":
