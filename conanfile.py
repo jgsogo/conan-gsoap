@@ -50,7 +50,7 @@ class GSoap(ConanFile):
 
     def _patch_wsdl2h(self, vcxproj):
         if self.options.with_openssl:
-            tools.replace_in_file(vcxproj, '<PreprocessorDefinitions>WIN32', '<PreprocessorDefinitions>WIN32;WITH_OPENSSL')
+            tools.replace_in_file(vcxproj, 'PreprocessorDefinitions="WIN32', 'PreprocessorDefinitions="WIN32;WITH_OPENSSL')
 
     def build(self):
         if self.settings.os == "Windows":
@@ -74,7 +74,7 @@ class GSoap(ConanFile):
             # - compile it
             wsdl2h_sln = os.path.join(wsdl2h_dir, "wsdl2h.sln")
             msbuild = MSBuild(self)
-            self._patch_wsdl2h(os.path.join(wsdl2h_dir, "wsdl2h", "wsdl2h.vcxproj"))
+            self._patch_wsdl2h(os.path.join(wsdl2h_dir, "wsdl2h", "wsdl2h.vcproj"))
             out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
 
         else:
