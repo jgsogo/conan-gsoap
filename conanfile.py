@@ -30,11 +30,11 @@ class GSoap(ConanFile):
     def requirements(self):
         if self.settings.os == "Windows":
             self.requires("winflexbison/2.5.14@jgsogo/stable")
-            if self.options.with_openssl:
-                self.requires("OpenSSL/1.0.2o@conan/stable")
         else:
             self.requires("bison/3.0.4@bincrafters/stable")
             self.requires("flex/2.6.4@bincrafters/stable")
+        if self.options.with_openssl:
+            self.requires("OpenSSL/1.0.2o@conan/stable")
 
     def source(self):
         try:
@@ -104,6 +104,17 @@ class GSoap(ConanFile):
             out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
 
         else:
+            with chdir(self.lib_name):
+                self.run('chmod +x configure')
+                self.run('./configure --help')
+                env_build = AutoToolsBuildEnvironment(self)
+                self.run('autoreconf -f -i')  # Fix out of date aclocal
+                env_build.configure(args=['--prefix', self.package_folder,
+                                          '--with-openssl={}'.format(self.deps_cpp_info["OpenSSL"].rootpath)],
+                                    build=False)
+                env_build.make(args=["-j1",])  # Weird, but with -j2 it fails
+                env_build.make(args=['install'])
+            """
             self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
             with chdir(os.path.join(self.lib_name, 'gsoap', 'src')):
                 self.run('make -f MakefileManual')
@@ -113,16 +124,6 @@ class GSoap(ConanFile):
                 self.run('make -f MakefileManual')
                 # self.run('make install')
             self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
-
-            """
-            with chdir(self.lib_name):
-                self.run('chmod +x configure')
-                self.run('./configure --help')
-                env_build = AutoToolsBuildEnvironment(self)
-                self.run('autoreconf -f -i')  # Fix out of date aclocal
-                env_build.configure(args=['--prefix', self.package_folder], build=False)
-                env_build.make()
-                env_build.make(args=['install'])
             """
 
     def package(self):
