@@ -4,6 +4,7 @@ import os
 import shutil
 from conans import ConanFile, AutoToolsBuildEnvironment, tools, CMake, RunEnvironment, MSBuild
 from conans.errors import NotFoundException
+from conans.tools import os_info, SystemPackageTool, chdir
 
 
 class ApacheAPR(ConanFile):
@@ -23,6 +24,12 @@ class ApacheAPR(ConanFile):
     short_paths = True
 
     lib_name = "gsoap-" + version_major
+
+    def system_requirements(self):
+        if os_info.is_linux:
+            pack_name = "autotools-dev automake"
+            installer = SystemPackageTool()
+            installer.install(pack_name)
 
     def requirements(self):
         if self.settings.os == "Windows":
@@ -71,15 +78,36 @@ class ApacheAPR(ConanFile):
             out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
 
         else:
-            env_build = AutoToolsBuildEnvironment(self)
-            env_build.configure(configure_dir=self.lib_name, args=['--prefix', self.package_folder, ], build=False)
-            env_build.make()
-            env_build.make(args=['install'])
+            self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
+            with chdir(os.path.join(self.lib_name, 'gsoap', 'src')):
+                self.run('make -f MakefileManual')
+                # self.run('make install')
+
+            with chdir(os.path.join(self.lib_name, 'gsoap', 'wsdl')):
+                self.run('make -f MakefileManual')
+                # self.run('make install')
+            self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
+
+            """
+            with chdir(self.lib_name):
+                self.run('chmod +x configure')
+                self.run('./configure --help')
+                env_build = AutoToolsBuildEnvironment(self)
+                self.run('autoreconf -f -i')  # Fix out of date aclocal
+                env_build.configure(args=['--prefix', self.package_folder], build=False)
+                env_build.make()
+                env_build.make(args=['install'])
+            """
 
     def package(self):
-        output_path = os.path.join(self.build_folder, self.lib_name, "gsoap", "VisualStudio2005")
-        self.copy("*.exe", dst="bin", src=os.path.join(output_path, "soapcpp2", str(self.settings.build_type)))
-        self.copy("*.exe", dst="bin", src=os.path.join(output_path, "wsdl2h", str(self.settings.build_type)))
+        if self.settings.os == "Windows":
+            output_path = os.path.join(self.build_folder, self.lib_name, "gsoap", "VisualStudio2005")
+            self.copy("*.exe", dst="bin", src=os.path.join(output_path, "soapcpp2", str(self.settings.build_type)))
+            self.copy("*.exe", dst="bin", src=os.path.join(output_path, "wsdl2h", str(self.settings.build_type)))
+        else:
+            output_path = os.path.join(self.build_folder, self.lib_name, "gsoap", "bin")
+            self.copy("soapcpp2", dst="bin", src=output_path)
+            self.copy("wsdl2h", dst="bin", src=output_path)
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
