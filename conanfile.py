@@ -18,7 +18,7 @@ class GSoap(ConanFile):
     license = "http://www.cs.fsu.edu/~engelen/soaplicense.html"
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
-    exports_sources = ["LICENSE", "FindGSOAP"]
+    exports_sources = ["LICENSE", "FindGSOAP.cmake"]
     settings = "os", "compiler", "build_type", "arch"
     options = {"with_openssl": [True, False]}
     default_options = "with_openssl=True"
@@ -127,6 +127,7 @@ class GSoap(ConanFile):
             """
 
     def package(self):
+        self.copy("FindGSOAP.cmake", dst=".", src=".")
         gsoap_path = os.path.join(self.build_folder, self.lib_name, "gsoap")
         if self.settings.os == "Windows":
             output_path = os.path.join(gsoap_path, "VisualStudio2005")
