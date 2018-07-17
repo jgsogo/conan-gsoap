@@ -76,11 +76,17 @@ find_path(GSOAP_IMPORT_DIR
 # -----------------------------------------------------
 # GSOAP Include Directories
 # -----------------------------------------------------
-# find_path(GSOAP_INCLUDE_DIR
-	# NAMES stdsoap2.h
-	# HINTS ${GSOAP_ROOT} ${GSOAP_ROOT}/include ${GSOAP_ROOT}/include/*
-	# DOC "The gsoap include directory"
-# )
+find_path(GSOAP_INCLUDE_DIR
+	NAMES stdsoap2.h
+	HINTS ${GSOAP_ROOT} ${GSOAP_ROOT}/include ${GSOAP_ROOT}/include/*
+	DOC "The gsoap include directory"
+)
+
+# -----------------------------------------------------
+# GSOAP Sources (if gsoap++ library is not provided)
+# -----------------------------------------------------
+set(GSOAP_SOURCES ${GSOAP_INCLUDE_DIR}/stdsoap2.h ${GSOAP_ROOT}/src/stdsoap2.cpp)
+
 
 # -----------------------------------------------------
 # GSOAP Binaries

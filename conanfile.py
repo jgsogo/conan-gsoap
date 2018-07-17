@@ -138,6 +138,9 @@ class GSoap(ConanFile):
             output_path = os.path.join(gsoap_path, "bin")
             self.copy("soapcpp2", dst="bin", src=output_path)
             self.copy("wsdl2h", dst="bin", src=output_path)
+        
+        self.copy("stdsoap2.cpp", src=gsoap_path, dst="src")
+        self.copy("stdsoap2.h", src=gsoap_path, dst="include")
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
