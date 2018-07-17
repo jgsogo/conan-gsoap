@@ -18,7 +18,7 @@ class GSoap(ConanFile):
     license = "http://www.cs.fsu.edu/~engelen/soaplicense.html"
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
-    exports_sources = ["LICENSE", ]
+    exports_sources = ["LICENSE", "FindGSOAP"]
     settings = "os", "compiler", "build_type", "arch"
     options = {"with_openssl": [True, False]}
     default_options = "with_openssl=True"
