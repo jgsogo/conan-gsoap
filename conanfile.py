@@ -18,12 +18,13 @@ class GSoap(ConanFile):
     license = "http://www.cs.fsu.edu/~engelen/soaplicense.html"
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
-    exports_sources = ["LICENSE", "FindGSOAP.cmake"]
     settings = "os", "compiler", "build_type", "arch"
-    options = {"with_openssl": [True, False]}
+    options = {"with_openssl": [True, False],}
     default_options = "with_openssl=True"
     generators = "cmake"
     short_paths = True
+
+    exports_sources = ["LICENSE", "FindGSOAP.cmake", "src/*"]
 
     lib_name = "gsoap-" + version_major
 
@@ -42,6 +43,7 @@ class GSoap(ConanFile):
         except NotFoundException:  # Maybe it has been moved to `oldreleases`
             tools.get("https://sourceforge.net/projects/gsoap2/files/oldreleases/{name}_{version}.zip/download".format(name=self.name, version=self.version))
 
+    """
     def _patch_soapcpp2(self, vcxproj):
         # MSVC 2015
         props_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props")
@@ -77,9 +79,18 @@ class GSoap(ConanFile):
             etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/threads.c")
 
         tree.write(vcxproj, pretty_print=True, xml_declaration=True)
+    """
 
     def build(self):
         if self.settings.os == "Windows":
+            cmake = CMake(self)
+            cmake.definitions["GSOAP_PATH"] = os.path.join(self.source_folder, self.lib_name).replace('\\', '/')
+            # cmake.configure(source_folder="src/")
+            cmake.configure(source_folder=os.path.join(os.path.dirname(__file__), "src"))
+            # cmake.configure(source_folder=self.lib_name)
+            cmake.build()
+
+            """
             # Build soapcpp2.exe
             with tools.environment_append(RunEnvironment(self).vars):
                 soapcpp2_dir = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2"))
@@ -102,6 +113,7 @@ class GSoap(ConanFile):
             msbuild = MSBuild(self)
             self._patch_wsdl2h(os.path.join(wsdl2h_dir, "wsdl2h", "wsdl2h.vcproj"))
             out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
+            """
 
         else:
             with chdir(self.lib_name):
