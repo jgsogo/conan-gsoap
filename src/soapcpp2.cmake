@@ -17,7 +17,6 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.c PR
 set_source_files_properties(${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.h PROPERTIES GENERATED TRUE)
 set_source_files_properties(${CMAKE_BINARY_DIR}/generated/lex.yy.c PROPERTIES GENERATED TRUE)
 
-#lex.yy.o init2.o soapcpp2.o $(LIBS) -o $@
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.c
@@ -41,3 +40,4 @@ add_executable(soapcpp2 ${SRC_CPP})
 target_include_directories(soapcpp2 PRIVATE ${STDCPP2_PATH})
 set_source_files_properties(${SRC_CPP} PROPERTIES LANGUAGE C)
 add_dependencies(soapcpp2 FLEXBISON_GENERATORS)
+install(TARGETS soapcpp2 RUNTIME DESTINATION bin)

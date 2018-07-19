@@ -8,5 +8,5 @@ conan_basic_setup()
 message("Generate gSOAP from sources at ${GSOAP_PATH}")
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/soapcpp2.cmake)
-# include(${CMAKE_CURRENT_SOURCE_DIR}/wsdl2h.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/wsdl2h.cmake)
 

@@ -85,10 +85,15 @@ class GSoap(ConanFile):
         if self.settings.os == "Windows":
             cmake = CMake(self)
             cmake.definitions["GSOAP_PATH"] = os.path.join(self.source_folder, self.lib_name).replace('\\', '/')
+            if self.options.with_openssl:
+                cmake.definitions["WITH_OPENSSL"] = True
+                cmake.definitions["WITH_GZIP"] = True
+
             # cmake.configure(source_folder="src/")
             cmake.configure(source_folder=os.path.join(os.path.dirname(__file__), "src"))
             # cmake.configure(source_folder=self.lib_name)
             cmake.build()
+            cmake.install()
 
             """
             # Build soapcpp2.exe
