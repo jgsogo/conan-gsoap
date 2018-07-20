@@ -13,3 +13,6 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/wsdl2h.cmake)
 
 # Libraries
 include(${CMAKE_CURRENT_SOURCE_DIR}/gsoap.cmake)
+
+install(FILE ${GSOAP_PATH}/gsoap/typemap.dat DESTINATION .)
+install(DIRECTORY ${GSOAP_PATH}/gsoap/import DESTINATION import)

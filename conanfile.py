@@ -19,10 +19,13 @@ class GSoap(ConanFile):
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"with_openssl": [True, False],}
-    default_options = "with_openssl=True"
+    options = {"with_openssl": [True, False],
+               "with_ipv6": [True, False],
+               "with_cookies": [True, False],
+               "with_c_locale": [True, False]}
+    default_options = "with_openssl=True", "with_ipv6=True", \
+                      "with_cookies=True", "with_c_locale=True"
     generators = "cmake"
-    short_paths = True
 
     exports_sources = ["LICENSE", "FindGSOAP.cmake", "src/*"]
 
@@ -43,44 +46,6 @@ class GSoap(ConanFile):
         except NotFoundException:  # Maybe it has been moved to `oldreleases`
             tools.get("https://sourceforge.net/projects/gsoap2/files/oldreleases/{name}_{version}.zip/download".format(name=self.name, version=self.version))
 
-    """
-    def _patch_soapcpp2(self, vcxproj):
-        # MSVC 2015
-        props_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.props")
-        targets_file = os.path.join(self.deps_cpp_info["winflexbison"].rootpath, "bin", "custom_build_rules", "win_flex_bison_custom_build.targets")
-        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionSettings">', '<ImportGroup Label="ExtensionSettings"><Import Project="{}" />'.format(props_file))
-        tools.replace_in_file(vcxproj, '<ImportGroup Label="ExtensionTargets">', '<ImportGroup Label="ExtensionTargets"><Import Project="{}" />'.format(targets_file))
-        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_lex.l" />', '<Flex Include="soapcpp2_lex.l"><FileType>Document</FileType><OutputFile>lex.%(Filename).c</OutputFile></Flex>')
-        tools.replace_in_file(vcxproj, '<None Include="soapcpp2_yacc.y" />', '<Bison Include="soapcpp2_yacc.y"><FileType>Document</FileType><OutputFile>%(Filename).tab.c</OutputFile></Bison>')
-
-    def _patch_wsdl2h(self, vcxproj):
-        parser = etree.XMLParser(remove_blank_text=True)
-        tree = etree.parse(vcxproj, parser=parser)
-        root = tree.getroot()
-        if self.options.with_openssl:
-            for conf_tools in root.xpath("./Configurations/Configuration/Tool[@Name='VCCLCompilerTool']"):
-                conf_tools.attrib['PreprocessorDefinitions'] = ';'.join(["WITH_OPENSSL", conf_tools.attrib['PreprocessorDefinitions']])
-                include_dirs = [os.path.join(self.deps_cpp_info["OpenSSL"].rootpath, inc_dir) for inc_dir in self.deps_cpp_info["OpenSSL"].includedirs]
-                conf_tools.attrib['AdditionalIncludeDirectories'] = ';'.join(include_dirs + 
-                                                                             [r'"{}"'.format(os.path.dirname(vcxproj)), 
-                                                                              r'"{}"'.format(os.path.join(os.path.dirname(vcxproj), '..', '..', '..', 'plugin')),
-                                                                              conf_tools.attrib.get('AdditionalIncludeDirectories', '')])
-
-            for link_tool in root.xpath("./Configurations/Configuration/Tool[@Name='VCLinkerTool']"):
-                libraries = ["{}.lib".format(lib) for lib in self.deps_cpp_info["OpenSSL"].libs] + ["User32.lib", "GDI32.lib", "Advapi32.lib", "msvcrt{}.lib".format("" if str(self.settings.build_type)=="Release" else "d")]  # TODO: Those additional libraries, are they needed in conan-openssl?
-                link_tool.attrib['AdditionalDependencies'] = ' '.join(libraries + [link_tool.attrib['AdditionalDependencies'],])
-                library_dirs = [os.path.join(self.deps_cpp_info["OpenSSL"].rootpath, libdir) for libdir in self.deps_cpp_info["OpenSSL"].libdirs]
-                link_tool.attrib['AdditionalLibraryDirectories'] = ';'.join(library_dirs + [link_tool.attrib.get('AdditionalLibraryDirectories', ''),])
-
-            source_files = root.xpath("./Files/Filter[@Name='Source Files']")
-            assert len(source_files) == 1
-            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/httpda.c")
-            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/smdevp.c")
-            etree.SubElement(source_files[0], "File").set("RelativePath", "../../../plugin/threads.c")
-
-        tree.write(vcxproj, pretty_print=True, xml_declaration=True)
-    """
-
     def build(self):
         if self.settings.os == "Windows":
             cmake = CMake(self)
@@ -88,37 +53,16 @@ class GSoap(ConanFile):
             if self.options.with_openssl:
                 cmake.definitions["WITH_OPENSSL"] = True
                 cmake.definitions["WITH_GZIP"] = True
+            if self.options.with_ipv6:
+                cmake.definitions["WITH_IPV6"] = True
+            cmake.definitions["WITH_COOKIES"] = self.options.with_cookies
+            cmake.definitions["WITH_C_LOCALE"] = self.options.with_c_locale
 
             # cmake.configure(source_folder="src/")
-            cmake.configure(source_folder=os.path.join(os.path.dirname(__file__), "src"))
-            # cmake.configure(source_folder=self.lib_name)
+            # cmake.configure(source_folder=os.path.join(os.path.dirname(__file__), "src"))
+            cmake.configure(source_folder=self.lib_name)
             cmake.build()
             cmake.install()
-
-            """
-            # Build soapcpp2.exe
-            with tools.environment_append(RunEnvironment(self).vars):
-                soapcpp2_dir = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "soapcpp2"))
-                soapcpp2_sln = os.path.join(soapcpp2_dir, "soapcpp2.sln")
-                msbuild = MSBuild(self)
-                try:
-                    out = msbuild.build(soapcpp2_sln, platforms={'x86': 'Win32'})
-                except Exception as e:
-                    pass  # It fails when upgrading
-                self._patch_soapcpp2(os.path.join(soapcpp2_dir, "soapcpp2", "soapcpp2.vcxproj"))
-                out = msbuild.build(soapcpp2_sln, upgrade_project=False, platforms={'x86': 'Win32'})
-
-            # Build wsdl2h.exe
-            wsdl2h_dir = os.path.abspath(os.path.join(self.lib_name, "gsoap", "VisualStudio2005", "wsdl2h"))
-            # - copy soapcpp2.exe to wsdl2h directory (we want to use what we have compiled)
-            shutil.copy2(os.path.join(soapcpp2_dir, str(self.settings.build_type), "soapcpp2.exe"),
-                         os.path.join(wsdl2h_dir, "wsdl2h"))
-            # - compile it
-            wsdl2h_sln = os.path.join(wsdl2h_dir, "wsdl2h.sln")
-            msbuild = MSBuild(self)
-            self._patch_wsdl2h(os.path.join(wsdl2h_dir, "wsdl2h", "wsdl2h.vcproj"))
-            out = msbuild.build(wsdl2h_sln, platforms={'x86': 'Win32'})
-            """
 
         else:
             with chdir(self.lib_name):
@@ -129,7 +73,7 @@ class GSoap(ConanFile):
                 env_build.configure(args=['--prefix', self.package_folder,
                                           '--with-openssl={}'.format(self.deps_cpp_info["OpenSSL"].rootpath)],
                                     build=False)
-                env_build.make(args=["-j1",])  # Weird, but with -j2 it fails
+                env_build.make(args=["-j1", ])  # Weird, but with -j2 it fails
                 env_build.make(args=['install'])
             """
             self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))

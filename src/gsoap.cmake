@@ -6,12 +6,6 @@
 #   - gsoap_ssl++
 
 
-set(OUTPUT_SUFFIX "")
-if(${WITH_OPENSSL})
-    set(OUTPUT_SUFFIX "ssl")
-endif()
-
-
 # C library
 set(SRCS_GSOAP_C
     ${GSOAP_PATH}/gsoap/stdsoap2.c
@@ -24,7 +18,6 @@ set_target_properties(gsoap PROPERTIES
     PDB_OUTPUT_DIRECTORY bin
     PUBLIC_HEADER ${GSOAP_PATH}/gsoap/stdsoap2.h
     LINKER_LANGUAGE C
-    OUTPUT_NAME gsoap${OUTPUT_SUFFIX}
     )
 install(TARGETS gsoap
             RUNTIME DESTINATION bin
@@ -46,7 +39,6 @@ set_target_properties(gsoap++ PROPERTIES
     PDB_OUTPUT_DIRECTORY bin
     PUBLIC_HEADER ${GSOAP_PATH}/gsoap/stdsoap2.h
     LINKER_LANGUAGE CXX
-    OUTPUT_NAME gsoap${OUTPUT_SUFFIX}++
     )
 install(TARGETS gsoap++
             RUNTIME DESTINATION bin
@@ -57,8 +49,20 @@ install(TARGETS gsoap++
 
 # Add SSL if requested
 if(${WITH_OPENSSL})
-    target_compile_definitions(gsoap PRIVATE WITH_OPENSSL WITH_GZIP)
+    target_compile_definitions(gsoap PUBLIC WITH_OPENSSL WITH_GZIP)
     set_target_properties(gsoap PROPERTIES OUTPUT_NAME gsoapssl)
-    target_compile_definitions(gsoap++ PRIVATE WITH_OPENSSL WITH_GZIP)
+    target_compile_definitions(gsoap++ PUBLIC WITH_OPENSSL WITH_GZIP)
     set_target_properties(gsoap++ PROPERTIES OUTPUT_NAME gsoapssl++)
+endif()
+if(${WITH_IPV6})
+    target_compile_definitions(gsoap PUBLIC WITH_IPV6)
+    target_compile_definitions(gsoap++ PUBLIC WITH_IPV6)
+endif()
+if(${WITH_COOKIES})
+    target_compile_definitions(gsoap PUBLIC WITH_COOKIES)
+    target_compile_definitions(gsoap++ PUBLIC WITH_COOKIES)
+endif()
+if(${WITH_C_LOCALE})
+    target_compile_definitions(gsoap PUBLIC WITH_C_LOCALE)
+    target_compile_definitions(gsoap++ PUBLIC WITH_C_LOCALE)
 endif()
