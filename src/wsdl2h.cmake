@@ -25,9 +25,9 @@ if(${WITH_OPENSSL})
          ${GSOAP_PATH}/gsoap/plugin/smdevp.c
          ${GSOAP_PATH}/gsoap/plugin/threads.c
         )
-    set_source_files_properties(${SRC_CPP} PROPERTIES LANGUAGE CXX)
 endif()
 
+set_source_files_properties(${SRC_CPP} PROPERTIES LANGUAGE CXX)
 set_source_files_properties(${CMAKE_BINARY_DIR}/generated/wsdlC.cpp PROPERTIES GENERATED TRUE)
 
 add_custom_command(
