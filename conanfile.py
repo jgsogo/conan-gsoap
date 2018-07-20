@@ -1,8 +1,6 @@
 
 
 import os
-import shutil
-from lxml import etree
 
 from conans import ConanFile, AutoToolsBuildEnvironment, tools, CMake, RunEnvironment, MSBuild
 from conans.errors import NotFoundException
