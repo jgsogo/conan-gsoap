@@ -4,7 +4,7 @@ project(PackageTest CXX)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
-find_package(gSOAP REQUIRED)
+find_package(GSOAP REQUIRED)
 
 add_executable(example example.cpp
     ${CMAKE_BINARY_DIR}/soapC.cpp

@@ -87,19 +87,6 @@ class GSoap(ConanFile):
 
     def package(self):
         self.copy("FindGSOAP.cmake", dst=".", src=".")
-        gsoap_path = os.path.join(self.build_folder, self.lib_name, "gsoap")
-        if self.settings.os == "Windows":
-            output_path = os.path.join(gsoap_path, "VisualStudio2005")
-            self.copy("*.exe", dst="bin", src=os.path.join(output_path, "soapcpp2", str(self.settings.build_type)))
-            self.copy("*.exe", dst="bin", src=os.path.join(output_path, "wsdl2h", str(self.settings.build_type)))
-            self.copy("*", dst="import", src=os.path.join(gsoap_path, "import"))
-        else:
-            output_path = os.path.join(gsoap_path, "bin")
-            self.copy("soapcpp2", dst="bin", src=output_path)
-            self.copy("wsdl2h", dst="bin", src=output_path)
-        
-        self.copy("stdsoap2.cpp", src=gsoap_path, dst="src")
-        self.copy("stdsoap2.h", src=gsoap_path, dst="include")
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
