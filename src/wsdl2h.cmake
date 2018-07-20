@@ -42,7 +42,10 @@ add_custom_target(WSDL2H_GENERATORS
         ${CMAKE_BINARY_DIR}/generated/wsdlC.cpp)
 
 add_executable(wsdl2h ${SRC_CPP})
-target_include_directories(wsdl2h PRIVATE ${GSOAP_PATH}/gsoap ${WSDL2H_PATH})
+target_include_directories(wsdl2h
+    PRIVATE ${GSOAP_PATH}/gsoap
+    PRIVATE ${CMAKE_BINARY_DIR}/generated
+    PRIVATE ${WSDL2H_PATH})
 add_dependencies(wsdl2h WSDL2H_GENERATORS)
 if(${WITH_OPENSSL})
     find_package(OpenSSL REQUIRED)

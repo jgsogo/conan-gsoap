@@ -47,31 +47,31 @@ find_path(GSOAP_IMPORT_DIR
 # -----------------------------------------------------
 # GSOAP Libraries
 # -----------------------------------------------------
-# find_library(GSOAP_CXX_LIBRARIES
-	# NAMES gsoap++
-	# HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
-		  # ${GSOAP_ROOT}/lib32
-	# DOC "The main gsoap library"
-# )
-# find_library(GSOAP_SSL_CXX_LIBRARIES
-	# NAMES gsoapssl++
-	# HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
-		  # ${GSOAP_ROOT}/lib32
-	# DOC "The ssl gsoap library"
-# )
+find_library(GSOAP_CXX_LIBRARIES
+	NAMES gsoap++
+	HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
+		  ${GSOAP_ROOT}/lib32
+	DOC "The main gsoap library"
+)
+find_library(GSOAP_SSL_CXX_LIBRARIES
+	NAMES gsoapssl++
+	HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
+		  ${GSOAP_ROOT}/lib32
+	DOC "The ssl gsoap library"
+)
 
-# find_library(GSOAP_C_LIBRARIES
-	# NAMES gsoap
-	# HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
-		  # ${GSOAP_ROOT}/lib32
-	# DOC "The main gsoap library"
-# )
-# find_library(GSOAP_SSL_C_LIBRARIES
-	# NAMES gsoapssl
-	# HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
-		  # ${GSOAP_ROOT}/lib32
-	# DOC "The ssl gsoap library"
-# )
+find_library(GSOAP_C_LIBRARIES
+	NAMES gsoap
+	HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
+		  ${GSOAP_ROOT}/lib32
+	DOC "The main gsoap library"
+)
+find_library(GSOAP_SSL_C_LIBRARIES
+	NAMES gsoapssl
+	HINTS ${GSOAP_ROOT}/lib ${GSOAP_ROOT}/lib64
+		  ${GSOAP_ROOT}/lib32
+	DOC "The ssl gsoap library"
+)
 
 # -----------------------------------------------------
 # GSOAP Include Directories
@@ -118,12 +118,12 @@ string(REGEX MATCH "[0-9]*\\.[0-9]*\\.[0-9]*" GSOAP_VERSION ${GSOAP_STRING_VERSI
 # -----------------------------------------------------
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(gsoap DEFAULT_MSG 
-    # GSOAP_CXX_LIBRARIES
-    # GSOAP_C_LIBRARIES
-    # GSOAP_INCLUDE_DIR
+    GSOAP_CXX_LIBRARIES
+    GSOAP_C_LIBRARIES
+    GSOAP_INCLUDE_DIR
     GSOAP_WSDL2H
     GSOAP_SOAPCPP2)
 mark_as_advanced(GSOAP_WSDL2H GSOAP_SOAPCPP2 
-                 #GSOAP_INCLUDE_DIR 
-                 # GSOAP_LIBRARIES 
+                 GSOAP_INCLUDE_DIR
+                 GSOAP_LIBRARIES
                  )

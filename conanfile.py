@@ -26,8 +26,8 @@ class GSoap(ConanFile):
     default_options = "with_openssl=True", "with_ipv6=True", \
                       "with_cookies=True", "with_c_locale=True"
     generators = "cmake"
-
-    exports_sources = ["LICENSE", "FindGSOAP.cmake", "src/*"]
+    short_paths = True
+    exports_sources = ["LICENSE", "FindGSOAP.cmake", "src/*.cmake", "src/*.txt"]
 
     lib_name = "gsoap-" + version_major
 
@@ -58,9 +58,8 @@ class GSoap(ConanFile):
             cmake.definitions["WITH_COOKIES"] = self.options.with_cookies
             cmake.definitions["WITH_C_LOCALE"] = self.options.with_c_locale
 
-            # cmake.configure(source_folder="src/")
             # cmake.configure(source_folder=os.path.join(os.path.dirname(__file__), "src"))
-            cmake.configure(source_folder=self.lib_name)
+            cmake.configure(source_folder="src")
             cmake.build()
             cmake.install()
 
