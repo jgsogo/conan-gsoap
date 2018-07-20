@@ -70,8 +70,9 @@ class GSoap(ConanFile):
                                           '--with-openssl={}'.format(self.deps_cpp_info["OpenSSL"].rootpath),
                                           '--with-zlib={}'.format(self.deps_cpp_info["zlib"].rootpath),
                                           '--enable-ipv6' if self.options.with_ipv6 else '--disable-ipv6',
-                                          '--enable-cookies' if self.options.with_cookies else '--disable-cookies',
-                                          '--enable-with_c_locale' if self.options.with_c_locale else '--disable-c_locale',
+                                          #'--enable-cookies' if self.options.with_cookies else '--disable-cookies',
+                                          '--enable-c-locale' if self.options.with_c_locale else '--disable-c-locale',
+                                          '--enable-debug' if self.settings.build_type == 'Debug' else '',
                                           ],
                                     build=False)
                 env_build.make(args=["-j1", ])  # Weird, but with -j2 it fails
