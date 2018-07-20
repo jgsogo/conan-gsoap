@@ -17,11 +17,13 @@ class GSoap(ConanFile):
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"with_openssl": [True, False],
+    options = {"shared": [True, False],
+               "with_openssl": [True, False],
                "with_ipv6": [True, False],
                "with_cookies": [True, False],
                "with_c_locale": [True, False]}
-    default_options = "with_openssl=True", "with_ipv6=True", \
+    default_options = "shared=True", \
+                      "with_openssl=True", "with_ipv6=True", \
                       "with_cookies=True", "with_c_locale=True"
     generators = "cmake"
     short_paths = True
