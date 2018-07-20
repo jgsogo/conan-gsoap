@@ -76,7 +76,7 @@ class GSoap(ConanFile):
                                           ],
                                     build=False)
                 env_build.make(args=["-j1", ])  # Weird, but with -j2 it fails
-                env_build.make(args=['install'])
+                env_build.make(args=['install', ])
             """
             self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
             with chdir(os.path.join(self.lib_name, 'gsoap', 'src')):
