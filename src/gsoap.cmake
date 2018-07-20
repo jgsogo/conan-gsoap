@@ -49,10 +49,18 @@ install(TARGETS gsoap++
 
 # Add SSL if requested
 if(${WITH_OPENSSL})
+    find_package(OpenSSL REQUIRED)
+    find_package(zlib REQUIRED)
+
+    target_include_directories(gsoap PRIVATE ${GSOAP_PATH}/gsoap/plugin)
     target_compile_definitions(gsoap PUBLIC WITH_OPENSSL WITH_GZIP)
     set_target_properties(gsoap PROPERTIES OUTPUT_NAME gsoapssl)
+    target_link_libraries(gsoap ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
+
+    target_include_directories(gsoap++ PRIVATE ${GSOAP_PATH}/gsoap/plugin)
     target_compile_definitions(gsoap++ PUBLIC WITH_OPENSSL WITH_GZIP)
     set_target_properties(gsoap++ PROPERTIES OUTPUT_NAME gsoapssl++)
+    target_link_libraries(gsoap++ ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
 endif()
 if(${WITH_IPV6})
     target_compile_definitions(gsoap PUBLIC WITH_IPV6)
