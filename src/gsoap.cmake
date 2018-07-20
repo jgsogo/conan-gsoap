@@ -2,8 +2,8 @@
 # Generate requested libraries:
 #   - gsoap
 #   - gsoap++
-#   - gsoap_ssl
-#   - gsoap_ssl++
+#   - gsoapssl
+#   - gsoapssl++
 
 
 # C library
