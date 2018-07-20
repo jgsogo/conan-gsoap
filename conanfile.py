@@ -104,3 +104,19 @@ class GSoap(ConanFile):
 
     def package_info(self):
         self.env_info.PATH.append(os.path.join(self.package_folder, "bin"))
+        defines = []
+        if self.options.with_openssl:
+            libs = ["gsoapssl++", ]
+            defines.append("WITH_OPENSSL")
+            defines.append("WITH_GZIP")
+        else:
+            libs = ["gsoap++", ]
+        self.cpp_info.libs = libs
+
+        if self.options.with_ipv6:
+            defines.append("WITH_IPV6")
+        if self.options.with_cookies:
+            defines.append("WITH_COOKIES")
+        if self.options.with_c_locale:
+            defines.append("WITH_C_LOCALE")
+        self.cpp_info.defines = defines
