@@ -17,13 +17,11 @@ class GSoap(ConanFile):
     description = "The gSOAP toolkit is a C and C++ software development toolkit for SOAP and " \
                   "REST XML Web services and generic C/C++ XML data bindings."
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False],
-               "with_openssl": [True, False],
+    options = {"with_openssl": [True, False],
                "with_ipv6": [True, False],
                "with_cookies": [True, False],
                "with_c_locale": [True, False]}
-    default_options = "shared=True", \
-                      "with_openssl=True", "with_ipv6=True", \
+    default_options = "with_openssl=True", "with_ipv6=True", \
                       "with_cookies=True", "with_c_locale=True"
     generators = "cmake"
     short_paths = True
@@ -69,7 +67,12 @@ class GSoap(ConanFile):
                 env_build = AutoToolsBuildEnvironment(self)
                 self.run('autoreconf -f -i')  # Fix out of date aclocal
                 env_build.configure(args=['--prefix', self.package_folder,
-                                          '--with-openssl={}'.format(self.deps_cpp_info["OpenSSL"].rootpath)],
+                                          '--with-openssl={}'.format(self.deps_cpp_info["OpenSSL"].rootpath),
+                                          '--with-zlib={}'.format(self.deps_cpp_info["zlib"].rootpath),
+                                          '--enable-ipv6' if self.options.with_ipv6 else '--disable-ipv6',
+                                          '--enable-cookies' if self.options.with_cookies else '--disable-cookies',
+                                          '--enable-with_c_locale' if self.options.with_c_locale else '--disable-c_locale',
+                                          ],
                                     build=False)
                 env_build.make(args=["-j1", ])  # Weird, but with -j2 it fails
                 env_build.make(args=['install'])
