@@ -1,0 +1,27 @@
+linux: &linux
+   os: linux
+   sudo: required
+   language: python
+   python: "3.6"
+   services:
+     - docker
+osx: &osx
+   os: osx
+   language: generic
+env:
+   global:
+     - PYTHONUNBUFFERED=1
+
+matrix:
+   include:
+      - <<: *osx
+        osx_image: xcode9.2
+        env: CONAN_APPLE_CLANG_VERSIONS=9.0 CONAN_ARCHS=x86_64 CONAN_BUILD_TYPES=Release
+
+install:
+  - chmod +x .travis/install.sh
+  - ./.travis/install.sh
+
+script:
+  - chmod +x .travis/run.sh
+  - ./.travis/run.sh
