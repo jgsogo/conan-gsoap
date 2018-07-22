@@ -10,7 +10,7 @@ from conans.tools import os_info, SystemPackageTool, chdir
 class GSoap(ConanFile):
     name = "gsoap"  # TODO: Actual name is gSOAP, but may I adhere to @bincrafters claim for lowercase names?
     version_major = "2.8"
-    version = version_major + ".68"
+    version = "2.8.68"
     url = "https://github.com/jgsogo/conan-gsoap"
     homepage = "http://www.cs.fsu.edu/~engelen/soap.html"
     license = "http://www.cs.fsu.edu/~engelen/soaplicense.html"
