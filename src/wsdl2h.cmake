@@ -49,7 +49,7 @@ target_include_directories(wsdl2h
 add_dependencies(wsdl2h WSDL2H_GENERATORS)
 if(${WITH_OPENSSL})
     find_package(OpenSSL REQUIRED)
-    find_package(zlib REQUIRED)
+    find_package(ZLIB REQUIRED)
     target_include_directories(wsdl2h PRIVATE ${GSOAP_PATH}/gsoap/plugin)
     target_compile_definitions(wsdl2h PRIVATE WITH_OPENSSL WITH_GZIP)
     target_link_libraries(wsdl2h ${OPENSSL_LIBRARIES} ${ZLIB_LIBRARIES})
