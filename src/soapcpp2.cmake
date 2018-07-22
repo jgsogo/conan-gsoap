@@ -18,15 +18,21 @@ set_source_files_properties(${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.h PR
 set_source_files_properties(${CMAKE_BINARY_DIR}/generated/lex.yy.c PROPERTIES GENERATED TRUE)
 
 
+if(WIN32)
+    set(CMD_PREFIX "win_")
+else()
+    set(CMD_PREFIX "")
+endif()
+
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.c
-    COMMAND ${CONAN_WINFLEXBISON_ROOT}/bin/win_bison.exe -d -v -o ${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.c ${STDCPP2_PATH}/soapcpp2_yacc.y
+    COMMAND ${CONAN_WINFLEXBISON_ROOT}/bin/${CMD_PREFIX}bison -d -v -o ${CMAKE_BINARY_DIR}/generated/soapcpp2_yacc.tab.c ${STDCPP2_PATH}/soapcpp2_yacc.y
     COMMENT "Run BISON on soapcpp2"
     )
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/generated/lex.yy.c
-    COMMAND ${CONAN_WINFLEXBISON_ROOT}/bin/win_flex.exe --wincompat -o ${CMAKE_BINARY_DIR}/generated/lex.yy.c ${STDCPP2_PATH}/soapcpp2_lex.l
+    COMMAND ${CONAN_WINFLEXBISON_ROOT}/bin/${CMD_PREFIX}flex --wincompat -o ${CMAKE_BINARY_DIR}/generated/lex.yy.c ${STDCPP2_PATH}/soapcpp2_lex.l
     COMMENT "Run FLEX on soapcpp2"
     )
 
