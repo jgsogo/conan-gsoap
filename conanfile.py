@@ -75,19 +75,8 @@ class GSoap(ConanFile):
                                           '--enable-debug' if self.settings.build_type == 'Debug' else '',
                                           ],
                                     build=False)
-                env_build.make(args=["-j1", ], vars={'CONAN_CPU_COUNT': "1"},)  # Weird, but with -j2 it fails
+                env_build.make(args=["-j1", ],)  # Weird, but with -j2 it fails
                 env_build.make(args=['install', ])
-            """
-            self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
-            with chdir(os.path.join(self.lib_name, 'gsoap', 'src')):
-                self.run('make -f MakefileManual')
-                # self.run('make install')
-
-            with chdir(os.path.join(self.lib_name, 'gsoap', 'wsdl')):
-                self.run('make -f MakefileManual')
-                # self.run('make install')
-            self.run('ls -la {}'.format(os.path.join(self.lib_name, 'gsoap', 'bin')))
-            """
 
     def package(self):
         self.copy("FindGSOAP.cmake", dst=".", src=".")
